@@ -1,13 +1,18 @@
-const pool = require("../config/db");
-
-async function logIrrigation(potId, durationSeconds) {
-  const sql = `
-    INSERT INTO irrigation_system (date, time, count, pot_id)
-    VALUES (CURDATE(), CURTIME(), ?, ?)
-  `;
-  await pool.execute(sql, [durationSeconds, potId]);
+function logIrrigationStart({ potId, mode, durationMs }) {
+  console.log("📝 irrigation.start", {
+    potId,
+    mode,
+    durationMs,
+    time: new Date().toISOString(),
+  });
 }
 
-module.exports = {
-  logIrrigation
-};
+function logIrrigationStop({ potId, mode }) {
+  console.log("📝 irrigation.stop", {
+    potId,
+    mode,
+    time: new Date().toISOString(),
+  });
+}
+
+module.exports = { logIrrigationStart, logIrrigationStop };

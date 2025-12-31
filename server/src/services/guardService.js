@@ -1,9 +1,10 @@
-function isSafeToIrrigate(lightValue) {
-  // ערך דוגמה – אפשר לשנות
-  const LIGHT_THRESHOLD = 2000;
-  return lightValue < LIGHT_THRESHOLD;
+const LIGHT_THRESHOLD = 700;
+
+function guardIrrigation({ light }) {
+  if (light > LIGHT_THRESHOLD) {
+    return { allowed: false, reason: "STRONG_LIGHT" };
+  }
+  return { allowed: true };
 }
 
-module.exports = {
-  isSafeToIrrigate
-};
+module.exports = { guardIrrigation };

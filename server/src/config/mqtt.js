@@ -1,35 +1,29 @@
 const mqtt = require("mqtt");
-const { setMode } = require("../services/modeEngine");
+const { ingestSensorsMessage } = require("../services/sensorIngestor");
+const { setMode } = require("../services/stateMachine");
 
 const client = mqtt.connect(process.env.MQTT_HOST, {
-  clientId: process.env.MQTT_CLIENT_ID
+  clientId: process.env.MQTT_CLIENT_ID,
 });
 
-
 client.on("connect", () => {
-  console.log("✅ MQTT connected to Mosquitto");
+  console.log("✅ MQTT connected");
 
-  // 🔥 חובה – subscribe רק אחרי connect
-  client.subscribe("irrigation/web/mode/set", () => {
-    console.log("📡 Subscribed to irrigation/web/mode/set");
-  });
+  client.subscribe("irrigation/esp32/sensors");
+  client.subscribe("irrigation/web/mode/set");
 });
 
 client.on("message", (topic, message) => {
-  console.log("📩 MQTT MESSAGE:", topic, message.toString());
+  const payload = message.toString();
+
+  if (topic === "irrigation/esp32/sensors") {
+    ingestSensorsMessage(payload, client);
+  }
 
   if (topic === "irrigation/web/mode/set") {
-    try {
-      const { mode } = JSON.parse(message.toString());
-      setMode(mode); // 🔁 שינוי מצב
-    } catch (err) {
-      console.error("❌ Invalid MQTT message", err);
-    }
+    const { mode } = JSON.parse(payload);
+    setMode(mode);
   }
-});
-
-client.on("error", (err) => {
-  console.error("❌ MQTT error:", err);
 });
 
 module.exports = client;
