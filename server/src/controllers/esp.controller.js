@@ -22,18 +22,9 @@ async function createSensorAvg(req, res) {
       id
     });
   } catch (err) {
-  console.error("❌ ERROR DETAILS:");
-  console.error(err);
-  console.error("❌ SQL MESSAGE:", err?.sqlMessage);
-  console.error("❌ CODE:", err?.code);
-
-  res.status(500).json({
-    error: err.message,
-    sqlMessage: err.sqlMessage,
-    code: err.code
-  });
-}
-
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 }
 
 // GET /api/esp/sensors/pot/:potId
