@@ -1,50 +1,50 @@
-const sensorsModel = require("../db/sensors.model");
+const mqttClient = require("../config/mqtt");
+const { getLatestSensors } = require("../services/sensorCache");
+const { setMode, getMode } = require("../services/stateMachine");
+const {
+  pumpOn: pumpOnService,
+  pumpOff: pumpOffService,
+} = require("../services/pumpService");
 
-// POST /api/esp/sensors
-async function createSensorAvg(req, res) {
-  try {
-    const { sensorName, value, potId } = req.body;
-
-    if (!sensorName || typeof value !== "number" || potId <= 0) {
-      return res.status(400).json({
-        message: "Invalid sensor data"
-      });
-    }
-
-    const id = await sensorsModel.insertSensorAvg(
-      sensorName,
-      value,
-      potId
-    );
-
-    res.status(201).json({
-      message: "Sensor data saved",
-      id
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
+// ===== Sensors =====
+function getLatestSensorsController(req, res) {
+  res.json(getLatestSensors());
 }
 
-// GET /api/esp/sensors/pot/:potId
-async function getSensorsByPot(req, res) {
-  try {
-    const potId = Number(req.params.potId);
+// ===== Mode =====
+function setModeController(req, res) {
+  const { mode } = req.body;
+  setMode(mode);
+  res.json({ message: "Mode updated", mode });
+}
 
-    if (!potId) {
-      return res.status(400).json({ message: "Invalid potId" });
-    }
+// ===== Pump =====
+function pumpOnController(req, res) {
+  const { duration = 5000, potId = 1 } = req.body;
 
-    const data = await sensorsModel.getSensorsByPotId(potId);
-    res.json(data);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
+  pumpOnService(mqttClient, {
+    potId,
+    mode: getMode(),
+    durationMs: duration,
+  });
+
+  res.json({ message: "Pump ON sent" });
+}
+
+function pumpOffController(req, res) {
+  const { potId = 1 } = req.body;
+
+  pumpOffService(mqttClient, {
+    potId,
+    mode: getMode(),
+  });
+
+  res.json({ message: "Pump OFF sent" });
 }
 
 module.exports = {
-  createSensorAvg,
-  getSensorsByPot
+  getLatestSensorsController,
+  setModeController,
+  pumpOnController,
+  pumpOffController,
 };

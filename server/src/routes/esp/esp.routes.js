@@ -1,13 +1,16 @@
-const router = require("express").Router();
+const express = require("express");
+const router = express.Router();
+
 const {
-  createSensorAvg,
-  getSensorsByPot
+  getLatestSensorsController,
+  setModeController,
+  pumpOnController,
+  pumpOffController,
 } = require("../../controllers/esp.controller");
 
-// ESP → send sensor data
-router.post("/sensors", createSensorAvg);
-
-// ESP / debug → get sensors by pot
-router.get("/sensors/pot/:potId", getSensorsByPot);
+router.get("/sensors/latest", getLatestSensorsController);
+router.post("/mode", setModeController);
+router.post("/pump/on", pumpOnController);
+router.post("/pump/off", pumpOffController);
 
 module.exports = router;
